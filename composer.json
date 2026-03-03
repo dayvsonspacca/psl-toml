@@ -1,0 +1,18 @@
+{
+    "name": "dayvsonspacca/psl-toml",
+    "type": "library",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Dayvson Spacca",
+            "email": "spacca.dayvson@gmail.com"
+        }
+    ],
+    "require": {
+        "azjezz/psl": "^4.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13",
+        "carthage-software/mago": "^1.12.0"
+    }
+}
