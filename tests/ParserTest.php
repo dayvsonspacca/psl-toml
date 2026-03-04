@@ -583,6 +583,14 @@ final class ParserTest extends TestCase
     // -------------------------------------------------------------------------
 
     #[Test]
+    public function parse_multiline_basic_string_without_leading_newline(): void
+    {
+        $doc = $this->parse('value = """hello"""');
+
+        $this->assertSame('hello', $doc->get('value', Type\string())->unwrap());
+    }
+
+    #[Test]
     public function parse_multiline_basic_string_with_crlf(): void
     {
         $doc = $this->parse("value = \"\"\"\r\nline1\r\nline2\"\"\"");
