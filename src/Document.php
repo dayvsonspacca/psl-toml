@@ -7,6 +7,7 @@ namespace PslToml;
 use Psl\Iter;
 use Psl\Option;
 use Psl\Str;
+use Psl\Tree;
 use Psl\Type;
 use Psl\Type\TypeInterface;
 use Psl\Vec;
@@ -117,6 +118,44 @@ final class Document
     public function toArray(): array
     {
         return $this->data;
+    }
+
+    /**
+     * Returns a {@see Tree\NodeInterface} representing the document as a tree.
+     *
+     * Each node value is an associative array with two keys:
+     *  - {@code key}   — the TOML key ({@code null} for the document root);
+     *  - {@code value} — the raw PHP value at that position.
+     *
+     * Tables and non-empty arrays become {@see Tree\TreeNode} instances with
+     * their entries as children. Scalars and empty arrays become
+     * {@see Tree\LeafNode} instances.
+     *
+     * @return Tree\NodeInterface<array{key: string|null, value: mixed}>
+     */
+    public function toTree(): Tree\NodeInterface
+    {
+        return $this->buildNode(null, $this->data);
+    }
+
+    /**
+     * @param mixed $data
+     *
+     * @return Tree\NodeInterface<array{key: string|null, value: mixed}>
+     */
+    private function buildNode(?string $key, mixed $data): Tree\NodeInterface
+    {
+        if (!is_array($data) || $data === []) {
+            return Tree\leaf(['key' => $key, 'value' => $data]);
+        }
+
+        $children = [];
+
+        foreach ($data as $childKey => $childValue) {
+            $children[] = $this->buildNode((string) $childKey, $childValue);
+        }
+
+        return Tree\tree(['key' => $key, 'value' => $data], $children);
     }
 
     /**
