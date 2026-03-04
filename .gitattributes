@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Files excluded from distribution packages (composer install)
+/.claude/           export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/CLAUDE.md          export-ignore
+/command.php        export-ignore
+/mago.toml          export-ignore
+/phpunit.xml        export-ignore
+/tests/             export-ignore
