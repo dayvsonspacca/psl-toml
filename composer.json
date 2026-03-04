@@ -9,8 +9,8 @@
         }
     ],
     "scripts": {
-        "test": "vendor/bin/phpunit --colors=always --testdox",
-        "test:coverage": "vendor/bin/phpunit --coverage-html public --colors=always --testdox",
+        "test": "vendor/bin/phpunit --testdox",
+        "test:coverage": "vendor/bin/phpunit --coverage-html public --testdox",
         "lint": "vendor/bin/mago lint",
         "lint:fix": "vendor/bin/mago lint --fix",
         "fmt": "vendor/bin/mago fmt",
