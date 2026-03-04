@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PslToml;
 
+use Psl\Iter;
 use Psl\Str;
 
 /**
@@ -36,19 +37,20 @@ final class DocumentBuilder
     public function set(string $key, mixed $value): self
     {
         $segments = Str\split($key, '.');
-        $count    = count($segments);
-        $ref      = &$this->data;
+        $count = Iter\count($segments);
+        $ref = &$this->data;
 
         foreach ($segments as $i => $segment) {
-            if ($i < $count - 1) {
+            if ($i < ($count - 1)) {
                 if (!is_array($ref[$segment] ?? null)) {
                     $ref[$segment] = [];
                 }
 
                 $ref = &$ref[$segment];
-            } else {
-                $ref[$segment] = $value;
+                continue;
             }
+
+            $ref[$segment] = $value;
         }
 
         return $this;
