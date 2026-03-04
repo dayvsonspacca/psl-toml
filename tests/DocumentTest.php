@@ -6,6 +6,7 @@ namespace PslToml\Tests;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psl\Tree;
 use Psl\Type;
 use PslToml\Document;
 
@@ -184,5 +185,76 @@ final class DocumentTest extends TestCase
         $table = $doc->table('a.b')->unwrap();
 
         $this->assertSame('value', $table->get('c', Type\string())->unwrap());
+    }
+
+    #[Test]
+    public function to_tree_returns_leaf_for_empty_document(): void
+    {
+        $doc  = Document::empty();
+        $tree = $doc->toTree();
+
+        $this->assertInstanceOf(Tree\LeafNode::class, $tree);
+        $this->assertSame(['key' => null, 'value' => []], $tree->getValue());
+    }
+
+    #[Test]
+    public function to_tree_returns_tree_node_for_document_with_scalar_value(): void
+    {
+        $doc  = new Document(['name' => 'Alice']);
+        $tree = $doc->toTree();
+
+        $this->assertInstanceOf(Tree\TreeNode::class, $tree);
+
+        $children = $tree->getChildren();
+
+        $this->assertCount(1, $children);
+        $this->assertInstanceOf(Tree\LeafNode::class, $children[0]);
+        $this->assertSame(['key' => 'name', 'value' => 'Alice'], $children[0]->getValue());
+    }
+
+    #[Test]
+    public function to_tree_returns_nested_tree_for_table(): void
+    {
+        $doc  = new Document(['database' => ['host' => 'localhost', 'port' => 5432]]);
+        $tree = $doc->toTree();
+
+        $this->assertInstanceOf(Tree\TreeNode::class, $tree);
+
+        $children = $tree->getChildren();
+
+        $this->assertCount(1, $children);
+
+        $dbNode = $children[0];
+
+        $this->assertInstanceOf(Tree\TreeNode::class, $dbNode);
+        $this->assertSame('database', $dbNode->getValue()['key']);
+        $this->assertCount(2, $dbNode->getChildren());
+    }
+
+    #[Test]
+    public function to_tree_returns_leaf_for_empty_table(): void
+    {
+        $doc  = new Document(['empty' => []]);
+        $tree = $doc->toTree();
+
+        $this->assertInstanceOf(Tree\TreeNode::class, $tree);
+
+        $children = $tree->getChildren();
+
+        $this->assertCount(1, $children);
+        $this->assertInstanceOf(Tree\LeafNode::class, $children[0]);
+        $this->assertSame(['key' => 'empty', 'value' => []], $children[0]->getValue());
+    }
+
+    #[Test]
+    public function to_tree_root_value_contains_full_data_array(): void
+    {
+        $data = ['name' => 'Alice', 'age' => 30];
+        $doc  = new Document($data);
+        $tree = $doc->toTree();
+
+        $this->assertInstanceOf(Tree\TreeNode::class, $tree);
+        $this->assertNull($tree->getValue()['key']);
+        $this->assertSame($data, $tree->getValue()['value']);
     }
 }
