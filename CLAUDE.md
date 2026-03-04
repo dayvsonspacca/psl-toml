@@ -62,6 +62,6 @@ Conventional commits, split by responsibility:
 
 ## Roadmap
 
-1. `Parser` — consumes tokens from `Lexer`, produces `Document`, throws `ParseException`, public entry point returns `Psl\Result`
-2. `Parser` tests
-3. `Toml` facade — `Toml::load(string $path)` and `Toml::parse(string $source)` returning `Result<Document, ParseException>`
+All core features are implemented. Possible next steps:
+- Emitter — serialize `Document` back to a TOML string (normalizes format, e.g. `0xFF` → `255`)
+- Typed class generation from a `.toml` schema
