@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PslToml\Lexer;
 
 use Psl\Math;
+use Psl\Range;
 use Psl\Str;
 use Psl\Type;
 
@@ -126,13 +127,15 @@ final readonly class Span
      *
      * @param  non-empty-string  $source  The original TOML source document.
      * @return array{line: int<1, max>, column: int<1, max>}
+     *
+     * @mago-ignore analyzer:unhandled-thrown-type
      */
     public function toLineColumn(string $source): array
     {
         $line = 1;
         $column = 1;
 
-        for ($i = 0; $i < $this->start; $i++) {
+        foreach (Range\between(0, $this->start) as $i) {
             if ($source[$i] === "\n") {
                 $line++;
                 $column = 1;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PslToml;
 
+use Psl\DataStructure;
 use Psl\Iter;
+use Psl\Math;
 use Psl\Result\Failure;
 use Psl\Result\ResultInterface;
 use Psl\Result\Success;
@@ -29,14 +31,12 @@ use PslToml\Lexer\TokenType;
  * @see Lexer
  * @see Document
  *
- * @mago-ignore linter:too-many-methods,cyclomatic-complexity,kan-defect
+ * @mago-ignore linter:too-many-methods,cyclomatic-complexity,kan-defect,sensitive-parameter,halstead
  */
 final class Parser
 {
-    /** @var list<Token> */
-    private array $tokens = [];
-
-    private int $cursor = 0;
+    /** @var DataStructure\Queue<Token> */
+    private DataStructure\Queue $tokens;
 
     /** @var array<string, mixed> */
     private array $data = [];
@@ -49,7 +49,9 @@ final class Parser
     /**
      * @param non-empty-string $source
      */
-    public function __construct(private readonly string $source) {}
+    public function __construct(
+        private readonly string $source,
+    ) {}
 
     /**
      * Parses {@code $source} and returns a {@see Result\Success} containing
@@ -72,12 +74,14 @@ final class Parser
 
     private function collectTokens(): void
     {
+        $this->tokens = new DataStructure\Queue();
         $lexer = new Lexer($this->source);
 
         foreach ($lexer->tokenize() as $token) {
-            if (!$token->isTrivia()) {
-                $this->tokens[] = $token;
+            if ($token->isTrivia()) {
+                continue;
             }
+            $this->tokens->enqueue($token);
         }
     }
 
@@ -86,15 +90,12 @@ final class Parser
         while (!$this->isAtEnd()) {
             $token = $this->peek();
 
-            if ($token->is(TokenType::DoubleLeftBracket)) {
-                $this->parseArrayOfTablesHeader();
-            } elseif ($token->is(TokenType::LeftBracket)) {
-                $this->parseTableHeader();
-            } elseif ($token->isKey()) {
-                $this->parseKeyValue();
-            } else {
-                throw $this->error($token, "unexpected token {$token->type->label()}");
-            }
+            match (true) {
+                $token->is(TokenType::DoubleLeftBracket) => $this->parseArrayOfTablesHeader(),
+                $token->is(TokenType::LeftBracket) => $this->parseTableHeader(),
+                $token->isKey() => $this->parseKeyValue(),
+                default => throw $this->error($token, "unexpected token {$token->type->label()}"),
+            };
         }
     }
 
@@ -104,7 +105,7 @@ final class Parser
         $key = $this->parseKey();
         $this->consume(TokenType::RightBracket);
 
-        $this->currentPath         = $key;
+        $this->currentPath = $key;
         $this->currentIsArrayTable = false;
 
         $ref = &$this->data;
@@ -124,11 +125,11 @@ final class Parser
         $key = $this->parseKey();
         $this->consume(TokenType::DoubleRightBracket);
 
-        $this->currentPath         = $key;
+        $this->currentPath = $key;
         $this->currentIsArrayTable = true;
 
         $segments = $key;
-        $last     = array_pop($segments);
+        $last = array_pop($segments);
 
         if ($last === null) { // @codeCoverageIgnore
             return; // @codeCoverageIgnore
@@ -158,7 +159,7 @@ final class Parser
         $value = $this->parseValue();
 
         if ($this->currentIsArrayTable && $this->currentPath !== []) {
-            $ref          = &$this->data;
+            $ref = &$this->data;
             $pathSegments = $this->currentPath;
             $arraySegment = array_pop($pathSegments);
 
@@ -174,10 +175,11 @@ final class Parser
             $ref = &$ref[$arraySegment][$idx];
 
             $this->setNestedValue($ref, $keySegments, $value);
-        } else {
-            $fullPath = Vec\concat($this->currentPath, $keySegments);
-            $this->setNestedValue($this->data, $fullPath, $value);
+            return;
         }
+
+        $fullPath = Vec\concat($this->currentPath, $keySegments);
+        $this->setNestedValue($this->data, $fullPath, $value);
     }
 
     /**
@@ -206,8 +208,8 @@ final class Parser
         $this->advance();
 
         return match ($token->type) {
-            TokenType::BareKey      => $token->lexeme,
-            TokenType::BasicString  => $this->decodeBasicString($token),
+            TokenType::BareKey => $token->lexeme,
+            TokenType::BasicString => $this->decodeBasicString($token),
             TokenType::LiteralString => $this->decodeLiteralString($token),
             default => throw $this->error($token, "unexpected key type {$token->type->label()}"), // @codeCoverageIgnore
         };
@@ -236,14 +238,14 @@ final class Parser
         $this->advance();
 
         return match (true) {
-            $token->type->isString()     => $this->parseString($token),
-            $token->type->isInteger()    => $this->parseInteger($token),
+            $token->type->isString() => $this->parseString($token),
+            $token->type->isInteger() => $this->parseInteger($token),
             $token->is(TokenType::Float) => $this->parseFloat($token),
-            $token->is(TokenType::Inf)   => $this->parseInf($token),
-            $token->is(TokenType::Nan)   => NAN,
-            $token->is(TokenType::True)  => true,
+            $token->is(TokenType::Inf) => $this->parseInf($token),
+            $token->is(TokenType::Nan) => NAN,
+            $token->is(TokenType::True) => true,
             $token->is(TokenType::False) => false,
-            $token->type->isTemporal()   => $this->parseDateTime($token),
+            $token->type->isTemporal() => $this->parseDateTime($token),
             default => throw $this->error($token, "unexpected token {$token->type->label()} in value position"),
         };
     }
@@ -251,9 +253,9 @@ final class Parser
     private function parseString(Token $token): string
     {
         return match ($token->type) {
-            TokenType::BasicString            => $this->decodeBasicString($token),
-            TokenType::MultiLineBasicString   => $this->decodeMultiLineBasicString($token),
-            TokenType::LiteralString          => $this->decodeLiteralString($token),
+            TokenType::BasicString => $this->decodeBasicString($token),
+            TokenType::MultiLineBasicString => $this->decodeMultiLineBasicString($token),
+            TokenType::LiteralString => $this->decodeLiteralString($token),
             TokenType::MultiLineLiteralString => $this->decodeMultiLineLiteralString($token),
             default => throw $this->error($token, 'expected string'), // @codeCoverageIgnore
         };
@@ -264,10 +266,10 @@ final class Parser
         $lexeme = Str\replace($token->lexeme, '_', '');
 
         return match ($token->type) {
-            TokenType::Integer       => (int) $lexeme,
-            TokenType::HexInteger    => (int) base_convert(Byte\slice($lexeme, 2), 16, 10),
-            TokenType::OctalInteger  => (int) octdec(Byte\slice($lexeme, 2)),
-            TokenType::BinaryInteger => (int) bindec(Byte\slice($lexeme, 2)),
+            TokenType::Integer => (int) $lexeme,
+            TokenType::HexInteger => (int) Math\base_convert(Byte\slice($lexeme, 2), 16, 10),
+            TokenType::OctalInteger => (int) octdec(Byte\slice($lexeme, 2)),
+            TokenType::BinaryInteger => (int) Math\from_base(Byte\slice($lexeme, 2), 2),
             default => throw $this->error($token, 'expected integer'), // @codeCoverageIgnore
         };
     }
@@ -303,7 +305,7 @@ final class Parser
             ),
             TokenType::LocalDate => $this->tryFormats($lexeme, 'Y-m-d'),
             TokenType::LocalTime => $this->tryFormats($lexeme, 'H:i:s.u', 'H:i:s'),
-            default              => null, // @codeCoverageIgnore
+            default => null, // @codeCoverageIgnore
         };
 
         if ($dt === null) { // @codeCoverageIgnore
@@ -324,11 +326,11 @@ final class Parser
         while (!$this->isAtEnd() && !$this->peek()->is(TokenType::RightBracket)) {
             $values[] = $this->parseValue();
 
-            if ($this->peek()->is(TokenType::Comma)) {
-                $this->advance();
-            } else {
+            if (!$this->peek()->is(TokenType::Comma)) {
                 break;
             }
+
+            $this->advance();
         }
 
         $this->consume(TokenType::RightBracket);
@@ -350,11 +352,11 @@ final class Parser
             $value = $this->parseValue();
             $this->setNestedValue($result, $keySegments, $value);
 
-            if ($this->peek()->is(TokenType::Comma)) {
-                $this->advance();
-            } else {
+            if (!$this->peek()->is(TokenType::Comma)) {
                 break;
             }
+
+            $this->advance();
         }
 
         $this->consume(TokenType::RightBrace);
@@ -364,45 +366,43 @@ final class Parser
 
     private function decodeBasicString(Token $token): string
     {
-        return $this->decodeEscapes(substr($token->lexeme, 1, -1));
+        return $this->decodeEscapes(Byte\slice($token->lexeme, 1, -1));
     }
 
     private function decodeMultiLineBasicString(Token $token): string
     {
-        $inner = substr($token->lexeme, 3, -3);
+        $inner = Byte\slice($token->lexeme, 3, -3);
 
-        if (Str\starts_with($inner, "\r\n")) {
-            $inner = Byte\slice($inner, 2);
-        } elseif (Str\starts_with($inner, "\n")) {
-            $inner = Byte\slice($inner, 1);
-        }
+        $inner = match (true) {
+            Str\starts_with($inner, "\r\n") => Byte\slice($inner, 2),
+            Str\starts_with($inner, "\n") => Byte\slice($inner, 1),
+            default => $inner,
+        };
 
         return $this->decodeEscapes($inner);
     }
 
     private function decodeLiteralString(Token $token): string
     {
-        return substr($token->lexeme, 1, -1);
+        return Byte\slice($token->lexeme, 1, -1);
     }
 
     private function decodeMultiLineLiteralString(Token $token): string
     {
-        $inner = substr($token->lexeme, 3, -3);
+        $inner = Byte\slice($token->lexeme, 3, -3);
 
-        if (Str\starts_with($inner, "\r\n")) {
-            $inner = Byte\slice($inner, 2);
-        } elseif (Str\starts_with($inner, "\n")) {
-            $inner = Byte\slice($inner, 1);
-        }
-
-        return $inner;
+        return match (true) {
+            Str\starts_with($inner, "\r\n") => Byte\slice($inner, 2),
+            Str\starts_with($inner, "\n") => Byte\slice($inner, 1),
+            default => $inner,
+        };
     }
 
     private function decodeEscapes(string $s): string
     {
         $result = '';
-        $i      = 0;
-        $len    = Byte\length($s);
+        $i = 0;
+        $len = Byte\length($s);
 
         while ($i < $len) {
             if ($s[$i] !== '\\') {
@@ -419,16 +419,16 @@ final class Parser
             $c = $s[$i++];
 
             $result .= match ($c) {
-                'b'     => "\x08",
-                't'     => "\t",
-                'n'     => "\n",
-                'f'     => "\x0C",
-                'r'     => "\r",
-                'e'     => "\x1B",
-                '"'     => '"',
-                '\\'    => '\\',
-                'u'     => $this->decodeUnicodeEscape($s, $i, 4),
-                'U'     => $this->decodeUnicodeEscape($s, $i, 8),
+                'b' => "\x08",
+                't' => "\t",
+                'n' => "\n",
+                'f' => "\x0C",
+                'r' => "\r",
+                'e' => "\x1B",
+                '"' => '"',
+                '\\' => '\\',
+                'u' => $this->decodeUnicodeEscape($s, $i, 4),
+                'U' => $this->decodeUnicodeEscape($s, $i, 8),
                 default => '\\' . $c,
             };
         }
@@ -438,11 +438,11 @@ final class Parser
 
     private function decodeUnicodeEscape(string $s, int &$i, int $length): string
     {
-        $hex       = Byte\slice($s, $i, $length);
-        $i        += $length;
-        $codepoint = (int) hexdec($hex);
+        $hex = Byte\slice($s, $i, $length);
+        $i += $length;
+        $codepoint = (int) Math\from_base($hex, 16);
 
-        return mb_chr($codepoint, 'UTF-8') ?: '';
+        return Str\chr($codepoint, Str\Encoding::Utf8) ?? '';
     }
 
     /**
@@ -471,6 +471,9 @@ final class Parser
         $ref[$last] = $value;
     }
 
+    /**
+     * @mago-ignore linter:psl-datetime
+     */
     private function tryFormats(string $value, string ...$formats): ?\DateTimeImmutable
     {
         foreach ($formats as $format) {
@@ -486,12 +489,12 @@ final class Parser
 
     private function peek(): Token
     {
-        return $this->tokens[$this->cursor];
+        return $this->tokens->peek() ?? Token::eof(0); // @codeCoverageIgnore
     }
 
     private function advance(): Token
     {
-        return $this->tokens[$this->cursor++];
+        return $this->tokens->dequeue();
     }
 
     private function consume(TokenType $type): Token
@@ -507,7 +510,7 @@ final class Parser
 
     private function isAtEnd(): bool
     {
-        return $this->tokens[$this->cursor]->isEof();
+        return $this->tokens->peek()?->isEof() ?? true;
     }
 
     private function error(Token $token, string $reason): ParseException

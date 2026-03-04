@@ -45,7 +45,7 @@ final class Toml
             return new Success(Document::empty());
         }
 
-        return (new Parser($source))->parse();
+        return new Parser($source)->parse();
     }
 
     /**
