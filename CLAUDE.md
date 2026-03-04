@@ -26,6 +26,11 @@ composer check   # fmt:check + lint + analyze + test
 - Docblocks with `@param`, `@return`, `@throws` on all public methods (required by Mago)
 - Use PSL utilities (`Psl\Str`, `Psl\Vec`, `Psl\Iter`, etc.) consistently
 
+## Test coverage
+
+- 100% code coverage is required. Always run `composer test:coverage` after writing tests to verify.
+- Use `@codeCoverageIgnore` only on guards that are provably unreachable (e.g. null checks on values the type system guarantees are non-null).
+
 ## Test conventions
 
 - `#[Test]` attribute (not annotation)
