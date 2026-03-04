@@ -1,11 +1,8 @@
 # psl-toml
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/dayvsonspacca/psl-toml.svg?style=flat-square)](https://packagist.org/packages/dayvsonspacca/psl-toml)
-[![Total Downloads](https://img.shields.io/packagist/dt/dayvsonspacca/psl-toml.svg?style=flat-square)](https://packagist.org/packages/dayvsonspacca/psl-toml)
-[![License](https://img.shields.io/packagist/l/dayvsonspacca/psl-toml.svg?style=flat-square)](https://packagist.org/packages/dayvsonspacca/psl-toml)
-[![PHP Version](https://img.shields.io/packagist/php-v/dayvsonspacca/psl-toml.svg?style=flat-square)](https://packagist.org/packages/dayvsonspacca/psl-toml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/dayvsonspacca/psl-toml/tests.yml?style=flat-square&label=tests)](https://github.com/dayvsonspacca/psl-toml/actions/workflows/tests.yml)
-
+[![Latest Stable Version](https://img.shields.io/packagist/v/dayvsonspacca/psl-toml.svg)](https://packagist.org/packages/dayvsonspacca/psl-toml)
+[![Total Downloads](https://img.shields.io/packagist/dt/dayvsonspacca/psl-toml.svg)](https://packagist.org/packages/dayvsonspacca/psl-toml)
+[![License](https://img.shields.io/packagist/l/dayvsonspacca/psl-toml.svg)](https://packagist.org/packages/dayvsonspacca/psl-toml)
 A [TOML 1.0](https://toml.io) parser for PHP 8.4+ built on top of [azjezz/psl](https://github.com/azjezz/psl).
 
 ## Requirements
