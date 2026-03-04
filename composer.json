@@ -1,7 +1,8 @@
 {
     "name": "dayvsonspacca/psl-toml",
+    "description": "A TOML parser for PHP built on top of azjezz/psl",
     "type": "library",
-    "version": "1.0.0",
+    "license": "MIT",
     "authors": [
         {
             "name": "Dayvson Spacca",
@@ -24,6 +25,7 @@
         ]
     },
     "require": {
+        "php": "^8.4",
         "azjezz/psl": "^4.3"
     },
     "require-dev": {
