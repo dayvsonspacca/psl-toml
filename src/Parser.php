@@ -8,6 +8,9 @@ use Psl\Iter;
 use Psl\Result\Failure;
 use Psl\Result\ResultInterface;
 use Psl\Result\Success;
+use Psl\Str;
+use Psl\Str\Byte;
+use Psl\Vec;
 use PslToml\Exception\ParseException;
 use PslToml\Lexer\Lexer;
 use PslToml\Lexer\Token;
@@ -172,7 +175,7 @@ final class Parser
 
             $this->setNestedValue($ref, $keySegments, $value);
         } else {
-            $fullPath = array_merge($this->currentPath, $keySegments);
+            $fullPath = Vec\concat($this->currentPath, $keySegments);
             $this->setNestedValue($this->data, $fullPath, $value);
         }
     }
@@ -258,25 +261,25 @@ final class Parser
 
     private function parseInteger(Token $token): int
     {
-        $lexeme = str_replace('_', '', $token->lexeme);
+        $lexeme = Str\replace($token->lexeme, '_', '');
 
         return match ($token->type) {
             TokenType::Integer       => (int) $lexeme,
-            TokenType::HexInteger    => (int) base_convert(substr($lexeme, 2), 16, 10),
-            TokenType::OctalInteger  => (int) octdec(substr($lexeme, 2)),
-            TokenType::BinaryInteger => (int) bindec(substr($lexeme, 2)),
+            TokenType::HexInteger    => (int) base_convert(Byte\slice($lexeme, 2), 16, 10),
+            TokenType::OctalInteger  => (int) octdec(Byte\slice($lexeme, 2)),
+            TokenType::BinaryInteger => (int) bindec(Byte\slice($lexeme, 2)),
             default => throw $this->error($token, 'expected integer'), // @codeCoverageIgnore
         };
     }
 
     private function parseFloat(Token $token): float
     {
-        return (float) str_replace('_', '', $token->lexeme);
+        return (float) Str\replace($token->lexeme, '_', '');
     }
 
     private function parseInf(Token $token): float
     {
-        return str_starts_with($token->lexeme, '-') ? -INF : INF;
+        return Str\starts_with($token->lexeme, '-') ? -INF : INF;
     }
 
     private function parseDateTime(Token $token): \DateTimeImmutable
@@ -368,10 +371,10 @@ final class Parser
     {
         $inner = substr($token->lexeme, 3, -3);
 
-        if (str_starts_with($inner, "\r\n")) {
-            $inner = substr($inner, 2);
-        } elseif (str_starts_with($inner, "\n")) {
-            $inner = substr($inner, 1);
+        if (Str\starts_with($inner, "\r\n")) {
+            $inner = Byte\slice($inner, 2);
+        } elseif (Str\starts_with($inner, "\n")) {
+            $inner = Byte\slice($inner, 1);
         }
 
         return $this->decodeEscapes($inner);
@@ -386,10 +389,10 @@ final class Parser
     {
         $inner = substr($token->lexeme, 3, -3);
 
-        if (str_starts_with($inner, "\r\n")) {
-            $inner = substr($inner, 2);
-        } elseif (str_starts_with($inner, "\n")) {
-            $inner = substr($inner, 1);
+        if (Str\starts_with($inner, "\r\n")) {
+            $inner = Byte\slice($inner, 2);
+        } elseif (Str\starts_with($inner, "\n")) {
+            $inner = Byte\slice($inner, 1);
         }
 
         return $inner;
@@ -399,7 +402,7 @@ final class Parser
     {
         $result = '';
         $i      = 0;
-        $len    = strlen($s);
+        $len    = Byte\length($s);
 
         while ($i < $len) {
             if ($s[$i] !== '\\') {
@@ -434,7 +437,7 @@ final class Parser
 
     private function decodeUnicodeEscape(string $s, int &$i, int $length): string
     {
-        $hex       = substr($s, $i, $length);
+        $hex       = Byte\slice($s, $i, $length);
         $i        += $length;
         $codepoint = (int) hexdec($hex);
 
