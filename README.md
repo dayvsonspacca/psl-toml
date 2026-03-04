@@ -4,7 +4,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/dayvsonspacca/psl-toml.svg)](https://packagist.org/packages/dayvsonspacca/psl-toml)
 [![License](https://img.shields.io/packagist/l/dayvsonspacca/psl-toml.svg)](https://packagist.org/packages/dayvsonspacca/psl-toml)
 
-A [TOML 1.0](https://toml.io) parser for PHP 8.4+ built on top of [azjezz/psl](https://github.com/azjezz/psl).
+A [TOML 1.1](https://toml.io/en/v1.1.0) parser for PHP 8.4+ built on top of [azjezz/psl](https://github.com/azjezz/psl).
 
 ## Requirements
 

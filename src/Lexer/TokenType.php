@@ -14,7 +14,7 @@ use Psl\Vec;
  * it cannot be confused with an integer or string value; use {@see self::symbol()}
  * and {@see self::label()} when you need a human-readable representation.
  *
- * @see https://toml.io/en/v1.0.0
+ * @see https://toml.io/en/v1.1.0
  *
  * @mago-ignore linter:too-many-enum-cases,kan-defect,too-many-methods
  */

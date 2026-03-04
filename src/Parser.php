@@ -424,6 +424,7 @@ final class Parser
                 'n'     => "\n",
                 'f'     => "\x0C",
                 'r'     => "\r",
+                'e'     => "\x1B",
                 '"'     => '"',
                 '\\'    => '\\',
                 'u'     => $this->decodeUnicodeEscape($s, $i, 4),

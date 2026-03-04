@@ -510,6 +510,12 @@ final class Lexer
             return false; // @codeCoverageIgnore
         }
 
+        // TOML 1.1.0: non-ASCII bytes are part of multi-byte UTF-8 sequences
+        // representing Unicode letters and digits, which are valid in bare keys.
+        if (ord($char) >= 0x80) {
+            return true;
+        }
+
         return (
             $char >= 'a'
             && $char <= 'z'

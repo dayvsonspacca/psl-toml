@@ -483,4 +483,36 @@ final class LexerTest extends TestCase
     {
         $this->assertSame([TokenType::LiteralString, TokenType::Eof], $this->tokenize("''"));
     }
+    
+    #[Test]
+    public function it_tokenizes_unicode_bare_key_with_accented_characters(): void
+    {
+        $this->assertSame([TokenType::BareKey, TokenType::Eof], $this->tokenize('résumé'));
+    }
+
+    #[Test]
+    public function it_tokenizes_unicode_bare_key_with_cjk_characters(): void
+    {
+        $this->assertSame([TokenType::BareKey, TokenType::Eof], $this->tokenize('日本語'));
+    }
+
+    #[Test]
+    public function it_tokenizes_unicode_bare_key_with_emoji(): void
+    {
+        $this->assertSame([TokenType::BareKey, TokenType::Eof], $this->tokenize('🔑'));
+    }
+
+    #[Test]
+    public function it_produces_correct_lexeme_for_unicode_bare_key(): void
+    {
+        $lexemes = $this->lexemes('résumé');
+
+        $this->assertSame(['résumé', ''], $lexemes);
+    }
+
+    #[Test]
+    public function it_tokenizes_mixed_ascii_and_unicode_bare_key(): void
+    {
+        $this->assertSame([TokenType::BareKey, TokenType::Eof], $this->tokenize('my_résumé'));
+    }
 }

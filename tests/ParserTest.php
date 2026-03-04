@@ -325,9 +325,55 @@ final class ParserTest extends TestCase
         $this->assertSame(2, $table->get('y', Type\int())->unwrap());
     }
 
+    #[Test]
+    public function parse_inline_table_with_trailing_comma(): void
+    {
+        $doc = $this->parse('point = { x = 1, y = 2, }');
+
+        $table = $doc->table('point')->unwrap();
+
+        $this->assertSame(1, $table->get('x', Type\int())->unwrap());
+        $this->assertSame(2, $table->get('y', Type\int())->unwrap());
+    }
+
+    #[Test]
+    public function parse_inline_table_spanning_multiple_lines(): void
+    {
+        $doc = $this->parse("point = {\n  x = 1,\n  y = 2\n}");
+
+        $table = $doc->table('point')->unwrap();
+
+        $this->assertSame(1, $table->get('x', Type\int())->unwrap());
+        $this->assertSame(2, $table->get('y', Type\int())->unwrap());
+    }
+
     // -------------------------------------------------------------------------
     // Keys
     // -------------------------------------------------------------------------
+
+    #[Test]
+    public function parse_unicode_bare_key(): void
+    {
+        $doc = $this->parse('résumé = "Alice"');
+
+        $this->assertSame('Alice', $doc->get('résumé', Type\string())->unwrap());
+    }
+
+    #[Test]
+    public function parse_cjk_bare_key(): void
+    {
+        $doc = $this->parse('日本語 = "Japanese"');
+
+        $this->assertSame('Japanese', $doc->get('日本語', Type\string())->unwrap());
+    }
+
+    #[Test]
+    public function parse_unicode_bare_key_in_table_header(): void
+    {
+        $doc = $this->parse("[配置]\nhost = \"localhost\"");
+
+        $this->assertSame('localhost', $doc->get('配置.host', Type\string())->unwrap());
+    }
 
     #[Test]
     public function parse_quoted_key(): void
@@ -487,6 +533,22 @@ final class ParserTest extends TestCase
         $doc = $this->parse('value = "\\\\"');
 
         $this->assertSame('\\', $doc->get('value', Type\string())->unwrap());
+    }
+
+    #[Test]
+    public function parse_basic_string_with_esc_escape(): void
+    {
+        $doc = $this->parse('value = "\e"');
+
+        $this->assertSame("\x1B", $doc->get('value', Type\string())->unwrap());
+    }
+
+    #[Test]
+    public function parse_multiline_basic_string_with_esc_escape(): void
+    {
+        $doc = $this->parse("value = \"\"\"\n\\e\"\"\"");
+
+        $this->assertSame("\x1B", $doc->get('value', Type\string())->unwrap());
     }
 
     #[Test]
