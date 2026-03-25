@@ -9,7 +9,7 @@ A [TOML 1.1](https://toml.io/en/v1.1.0) parser for PHP 8.4+ built on top of [azj
 ## Requirements
 
 - PHP 8.4+
-- [`azjezz/psl`](https://github.com/azjezz/psl) ^4.3
+- [`php-standard-library/php-standard-library`]([https://github.com/azjezz/psl](https://github.com/php-standard-library/php-standard-library)) ^6.1
 
 ## Installation
 
