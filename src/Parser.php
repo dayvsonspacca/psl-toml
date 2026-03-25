@@ -8,7 +8,6 @@ use Psl\DataStructure;
 use Psl\Iter;
 use Psl\Math;
 use Psl\Result\Failure;
-use Psl\Result\ResultInterface;
 use Psl\Result\Success;
 use Psl\Str;
 use Psl\Str\Byte;
@@ -58,9 +57,9 @@ final class Parser
      * the {@see Document}, or a {@see Result\Failure} containing the
      * {@see ParseException} that caused the error.
      *
-     * @return ResultInterface<Document>
+     * @return Success<Document>|Failure<\Throwable>
      */
-    public function parse(): ResultInterface
+    public function parse(): Success|Failure
     {
         try {
             $this->collectTokens();

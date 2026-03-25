@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace PslToml;
 
 use Psl\File;
+use Psl\Filesystem;
 use Psl\Result\Failure;
-use Psl\Result\ResultInterface;
 use Psl\Result\Success;
 
 /**
  * Entry point for parsing TOML documents.
  *
- * Both methods return a {@see ResultInterface} so callers never need a
- * try/catch — inspect the result with {@see ResultInterface::getResult()} or
- * {@see ResultInterface::getThrowable()}.
+ * Both methods return {@see Success} or {@see Failure} so callers never need a
+ * try/catch — inspect the result with {@see Success::getResult()} or
+ * {@see Failure::getThrowable()}.
  *
  * ```php
  * $result = Toml::parse($source);
@@ -37,9 +37,9 @@ final class Toml
      *
      * An empty string is treated as a valid empty document.
      *
-     * @return ResultInterface<Document>
+     * @return Success<Document>|Failure<\Throwable>
      */
-    public static function parse(string $source): ResultInterface
+    public static function parse(string $source): Success|Failure
     {
         if ($source === '') {
             return new Success(Document::empty());
@@ -51,18 +51,22 @@ final class Toml
     /**
      * Reads {@code $path} from disk and parses its contents as TOML.
      *
-     * Returns a {@see Failure} if the file cannot be read or the contents
-     * are not valid TOML.
+     * Returns a {@see Failure} if the file does not exist, cannot be read,
+     * or the contents are not valid TOML.
      *
-     * @return ResultInterface<Document>
+     * @return Success<Document>|Failure<\Throwable>
      */
-    public static function load(string $path): ResultInterface
+    public static function load(string $path): Success|Failure
     {
-        try {
-            if ($path === '') {
-                throw new \InvalidArgumentException('File path cannot be empty.');
-            }
+        if ($path === '') {
+            return new Failure(new \InvalidArgumentException('File path cannot be empty.'));
+        }
 
+        if (!Filesystem\is_file($path)) {
+            return new Failure(new \InvalidArgumentException("File '{$path}' does not exist or is not a regular file."));
+        }
+
+        try {
             $content = File\read($path);
         } catch (\Throwable $e) {
             return new Failure($e);
